@@ -1,0 +1,14 @@
+## Tools
+- Sanitizers
+  - [Address Sanitizer](https://learn.microsoft.com/en-us/cpp/sanitizers/asan?view=msvc-170)
+  - [Memory Sanitizer](https://github.com/google/sanitizers/wiki/memorysanitizer)
+  - [Thread Sanitizer](https://github.com/google/sanitizers/wiki/threadsanitizercppmanual)
+- Compiler Warnings
+  - W4 / Wall
+- Static Analysis
+  - [Clang Static Analyzer](https://clang-analyzer.llvm.org/)
+  - [Coverity](https://www.blackduck.com/static-analysis-tools-sast/coverity.html)
+- Hardware Support (MTE)
+  - [ARM's Memory Tagging Extension](https://developer.android.com/ndk/guides/arm-mte)
+  - [Google’s GWP-ASan](https://developer.android.com/ndk/guides/gwp-asan)
+  - [Facebook’s CheckPointer](https://github.com/facebook/folly)
