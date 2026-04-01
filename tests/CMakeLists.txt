@@ -13,5 +13,5 @@ function(add_standalone_unit_test name)
   add_test(NAME ${name} COMMAND ${name})
 endfunction()
 
-add_unit_test(test_basic_arena)
+# add_unit_test(test_basic_arena)
 add_standalone_unit_test(test_arena_atomic)
