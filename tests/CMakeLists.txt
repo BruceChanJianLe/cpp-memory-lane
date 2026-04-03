@@ -13,5 +13,7 @@ function(add_standalone_unit_test name)
   add_test(NAME ${name} COMMAND ${name})
 endfunction()
 
-# add_unit_test(test_basic_arena)
+# atomic example also uses the static global method
 add_standalone_unit_test(test_arena_atomic)
+add_standalone_unit_test(test_arena_global)
+add_standalone_unit_test(test_arena_meyer)
