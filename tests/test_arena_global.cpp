@@ -1,6 +1,5 @@
 #include <cassert>
 #include <cstddef>
-#include <atomic>
 #include <cstdlib>
 #include <chrono>
 #include <mutex>
