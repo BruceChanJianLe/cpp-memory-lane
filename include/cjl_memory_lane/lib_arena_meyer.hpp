@@ -28,6 +28,8 @@ namespace cjl {
       assert(p);
       curr = p;
     }
+    Tribe(const Tribe&) = delete;
+    Tribe& operator=(const Tribe&) = delete;
 
   public:
     ~Tribe() {

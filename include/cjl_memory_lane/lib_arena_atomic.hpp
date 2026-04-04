@@ -4,11 +4,6 @@
 #include <cstddef>
 #include <atomic>
 #include <cstdlib>
-#include <chrono>
-#include <utility>
-#include <vector>
-#include <thread>
-#include <iostream>
 
 namespace cjl {
 
@@ -34,6 +29,8 @@ namespace cjl {
       assert(p);
       curr.store(p, std::memory_order_relaxed);
     }
+    Tribe(const Tribe&) = delete;
+    Tribe& operator=(const Tribe&) = delete;
 
   public:
     ~Tribe() {
