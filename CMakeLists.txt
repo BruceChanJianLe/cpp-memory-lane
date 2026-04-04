@@ -24,13 +24,13 @@ target_sources(${name}
       ./include/cjl_memory_lane/${name}.hpp
 )
 target_compile_features(${name} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
-target_compile_options(${name} INTERFACE -Wall -Wextra -fsanitize=address,undefined)
-target_link_options(${name} INTERFACE -fsanitize=address,undefined)
+target_compile_options(${name} INTERFACE -Wall -Wextra -O2)
 endfunction()
 
 add_lib(lib_arena_atomic)
 add_lib(lib_arena_global)
 add_lib(lib_arena_meyer)
+add_lib(lib_arena_atomic_template)
 
 # Testing (ensure correctness)
 include(CTest)
