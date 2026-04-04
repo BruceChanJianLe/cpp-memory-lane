@@ -8,15 +8,29 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-include(cmake/FetchDependencies.cmake)
+# include(cmake/FetchDependencies.cmake)
 
-set(MY_LIB_NAME cjl_memory_lane)
 
-add_library(${MY_LIB_NAME} INTERFACE)
-target_include_directories(${MY_LIB_NAME} INTERFACE include/)
-target_compile_features(${MY_LIB_NAME} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
-target_compile_options(${MY_LIB_NAME} INTERFACE -Wall -Wextra -fsanitize=address,undefined)
-target_link_options(${MY_LIB_NAME} INTERFACE -fsanitize=address,undefined)
+function(add_lib name)
+add_library(${name} INTERFACE)
+add_library(cjl::${name} ALIAS ${name})
+target_sources(${name}
+  PRIVATE
+    ./src/cjl_memory_lane/${name}.cpp
+  PUBLIC
+    FILE_SET HEADERS
+    BASE_DIRS include/
+    FILES
+      ./include/cjl_memory_lane/${name}.hpp
+)
+target_compile_features(${name} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
+target_compile_options(${name} INTERFACE -Wall -Wextra -fsanitize=address,undefined)
+target_link_options(${name} INTERFACE -fsanitize=address,undefined)
+endfunction()
+
+add_lib(lib_arena_atomic)
+add_lib(lib_arena_global)
+add_lib(lib_arena_meyer)
 
 # Testing (ensure correctness)
 include(CTest)
@@ -24,4 +38,4 @@ enable_testing()
 add_subdirectory(tests)
 
 # Benchmarking (always measure!)
-add_subdirectory(benchmarks)
+# add_subdirectory(benchmarks)
