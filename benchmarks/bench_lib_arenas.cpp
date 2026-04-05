@@ -8,114 +8,68 @@
 #include <barrier>
 #include <vector>
 
-// GB's ->Threads(2) keeps both threads alive for the entire benchmark — no
-// per-iteration spin-up cost. Each thread owns half the index range so there
-// is no data race on the orcs vector.
+// per-thread allocation count; NThreads * CHUNK must be < NB_MAX (1'000'000)
+static constexpr std::size_t CHUNK = 200'000;
+
+// Each policy exposes the Orc type and a reset() for its arena.
+template <typename OrcT, typename TribeT>
+struct ArenaPolicy {
+  using Orc = OrcT;
+  static void reset() { TribeT::get().reset(); }
+};
+
+using AtomicPolicy = ArenaPolicy<cjl::atomic::Orc, cjl::atomic::Tribe>;
+using GlobalPolicy = ArenaPolicy<cjl::global::Orc, cjl::global::Tribe>;
+using MeyerPolicy  = ArenaPolicy<cjl::meyer::Orc,  cjl::meyer::Tribe>;
+
+struct AtomicTmpPolicy {
+  using Orc = cjl::atomic_tmp::Orc;
+  static void reset() {
+    using Arena = cjl::atomic_tmp::SizeBasedArena<Orc, Orc::NB_MAX>;
+    Arena::get().reset();
+  }
+};
+
+// NThreads is a template parameter so each ->Threads(N) variant gets its own
+// static barrier and orcs vector (different template instantiation).
 //
-// A std::barrier coordinates the reset between iterations:
-//   phase 1 — both threads finish allocating, then barrier
+// Each thread owns orcs[tid*CHUNK .. (tid+1)*CHUNK), no data races.
+// std::barrier coordinates the per-iteration reset:
+//   phase 1 — all threads finish allocating, then barrier
 //   phase 2 — thread 0 resets the arena, then barrier
-// Only then do both threads resume timing for the next iteration.
-static constexpr std::size_t HALF = 490'000; // per thread; 2*HALF < NB_MAX
+template <typename Policy, int NThreads>
+void BM_Arena(benchmark::State& state) {
+  using Orc = typename Policy::Orc;
+  static std::vector<Orc*> orcs(NThreads * CHUNK);
+  static std::barrier<> bar{NThreads};
 
-static void BM_Atomic(benchmark::State& state) {
-  static std::vector<cjl::atomic::Orc*> orcs;
-  orcs.reserve(2 * HALF);
-  static std::barrier bar{2};
-
-  const auto start = state.thread_index() == 0 ? 0uz : HALF;
-  const auto end   = state.thread_index() == 0 ? HALF : 2 * HALF;
+  const auto tid   = static_cast<std::size_t>(state.thread_index());
+  const auto start = tid * CHUNK;
+  const auto end   = start + CHUNK;
 
   for (auto _ : state) {
     for (auto i = start; i != end; ++i)
-      benchmark::DoNotOptimize(orcs[i] = new cjl::atomic::Orc);
+      benchmark::DoNotOptimize(orcs[i] = new Orc);
 
-    bar.arrive_and_wait(); // both threads done allocating
+    bar.arrive_and_wait(); // all threads done allocating
     state.PauseTiming();
     if (state.thread_index() == 0) {
       for (auto orc : orcs) delete orc;
-      cjl::atomic::Tribe::get().reset();
+      Policy::reset();
     }
     bar.arrive_and_wait(); // reset complete
     state.ResumeTiming();
   }
-
-  // Calculate each allocation speed
-  // Comment it out if want timing for entire batch
-  state.SetItemsProcessed(state.iterations() * HALF);
+  state.SetItemsProcessed(state.iterations() * CHUNK);
 }
 
-static void BM_AtomicTemplate(benchmark::State& state) {
-  using Tribe = cjl::atomic_tmp::SizeBasedArena<cjl::atomic_tmp::Orc, cjl::atomic_tmp::Orc::NB_MAX>;
-  static std::vector<cjl::atomic_tmp::Orc*> orcs(2 * HALF);
-  static std::barrier bar{2};
-
-  const auto start = state.thread_index() == 0 ? 0uz : HALF;
-  const auto end   = state.thread_index() == 0 ? HALF : 2 * HALF;
-
-  for (auto _ : state) {
-    for (auto i = start; i != end; ++i)
-      benchmark::DoNotOptimize(orcs[i] = new cjl::atomic_tmp::Orc);
-
-    bar.arrive_and_wait();
-    state.PauseTiming();
-    if (state.thread_index() == 0) {
-      for (auto orc : orcs) delete orc;
-      Tribe::get().reset();
-    }
-    bar.arrive_and_wait();
-    state.ResumeTiming();
-  }
-  state.SetItemsProcessed(state.iterations() * HALF);
-}
-
-static void BM_Global(benchmark::State& state) {
-  static std::vector<cjl::global::Orc*> orcs(2 * HALF);
-  static std::barrier bar{2};
-
-  const auto start = state.thread_index() == 0 ? 0uz : HALF;
-  const auto end   = state.thread_index() == 0 ? HALF : 2 * HALF;
-
-  for (auto _ : state) {
-    for (auto i = start; i != end; ++i)
-      benchmark::DoNotOptimize(orcs[i] = new cjl::global::Orc);
-
-    bar.arrive_and_wait();
-    state.PauseTiming();
-    if (state.thread_index() == 0) {
-      for (auto orc : orcs) delete orc;
-      cjl::global::Tribe::get().reset();
-    }
-    bar.arrive_and_wait();
-    state.ResumeTiming();
-  }
-  state.SetItemsProcessed(state.iterations() * HALF);
-}
-
-static void BM_Meyer(benchmark::State& state) {
-  static std::vector<cjl::meyer::Orc*> orcs(2 * HALF);
-  static std::barrier bar{2};
-
-  const auto start = state.thread_index() == 0 ? 0uz : HALF;
-  const auto end   = state.thread_index() == 0 ? HALF : 2 * HALF;
-
-  for (auto _ : state) {
-    for (auto i = start; i != end; ++i)
-      benchmark::DoNotOptimize(orcs[i] = new cjl::meyer::Orc);
-
-    bar.arrive_and_wait();
-    state.PauseTiming();
-    if (state.thread_index() == 0) {
-      for (auto orc : orcs) delete orc;
-      cjl::meyer::Tribe::get().reset();
-    }
-    bar.arrive_and_wait();
-    state.ResumeTiming();
-  }
-  state.SetItemsProcessed(state.iterations() * HALF);
-}
-
-BENCHMARK(BM_Atomic)        ->Threads(2)->UseRealTime();
-BENCHMARK(BM_AtomicTemplate)->Threads(2)->UseRealTime();
-BENCHMARK(BM_Global)        ->Threads(2)->UseRealTime();
-BENCHMARK(BM_Meyer)         ->Threads(2)->UseRealTime();
+// 2-thread benchmarks
+BENCHMARK_TEMPLATE(BM_Arena, AtomicPolicy,    2)->Threads(2)->UseRealTime();
+BENCHMARK_TEMPLATE(BM_Arena, AtomicTmpPolicy, 2)->Threads(2)->UseRealTime();
+BENCHMARK_TEMPLATE(BM_Arena, GlobalPolicy,    2)->Threads(2)->UseRealTime();
+BENCHMARK_TEMPLATE(BM_Arena, MeyerPolicy,     2)->Threads(2)->UseRealTime();
+// 4-thread benchmarks
+BENCHMARK_TEMPLATE(BM_Arena, AtomicPolicy,    4)->Threads(4)->UseRealTime();
+BENCHMARK_TEMPLATE(BM_Arena, AtomicTmpPolicy, 4)->Threads(4)->UseRealTime();
+BENCHMARK_TEMPLATE(BM_Arena, GlobalPolicy,    4)->Threads(4)->UseRealTime();
+BENCHMARK_TEMPLATE(BM_Arena, MeyerPolicy,     4)->Threads(4)->UseRealTime();
