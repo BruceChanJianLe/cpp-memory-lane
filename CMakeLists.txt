@@ -8,7 +8,7 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# include(cmake/FetchDependencies.cmake)
+include(cmake/FetchDependencies.cmake)
 
 
 function(add_lib name)
