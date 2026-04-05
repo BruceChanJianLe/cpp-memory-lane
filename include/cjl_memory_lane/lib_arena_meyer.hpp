@@ -5,7 +5,7 @@
 #include <mutex>
 #include <cstdlib>
 
-namespace cjl {
+namespace cjl::meyer {
 
   class Orc {
     char name[4] {'U', 'R', 'G'};
@@ -41,6 +41,11 @@ namespace cjl {
       return singleton;
     }
 
+    void reset() {
+      std::lock_guard _{m};
+      curr = p;
+    }
+
     void * allocate_one() {
       std::lock_guard _{m};
       auto q = curr;
@@ -59,4 +64,4 @@ namespace cjl {
 
     void deallocate_n(void *) noexcept {}
   };
-} // cjl
+} // cjl::meyer

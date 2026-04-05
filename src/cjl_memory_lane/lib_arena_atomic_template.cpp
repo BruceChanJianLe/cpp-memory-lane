@@ -1,6 +1,6 @@
 #include "cjl_memory_lane/lib_arena_atomic_template.hpp"
 
-namespace cjl {
+namespace cjl::atomic_tmp {
   template <class T, std::size_t N>
   SizeBasedArena<T, N> SizeBasedArena<T, N>::singleton;
 
@@ -21,4 +21,4 @@ namespace cjl {
   void Orc::operator delete[](void *p) noexcept {
     Tribe::get().deallocate_n(p);
   }
-} // cjl 
+} // cjl::atomic_tmp 

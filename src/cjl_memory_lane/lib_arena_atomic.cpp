@@ -1,6 +1,6 @@
 #include "cjl_memory_lane/lib_arena_atomic.hpp"
 
-namespace cjl {
+namespace cjl::atomic {
   Tribe Tribe::singleton;
 
   void * Orc::operator new(std::size_t) {
@@ -18,4 +18,4 @@ namespace cjl {
   void Orc::operator delete[](void *p) noexcept {
     Tribe::get().deallocate_n(p);
   }
-} // cjl 
+} // cjl::atomic 

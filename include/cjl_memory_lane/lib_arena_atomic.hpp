@@ -5,8 +5,7 @@
 #include <atomic>
 #include <cstdlib>
 
-namespace cjl {
-
+namespace cjl::atomic {
   class Orc {
     char name[4] {'U', 'R', 'G'};
     int strength = 100;
@@ -41,6 +40,10 @@ namespace cjl {
       return singleton;
     }
 
+    void reset() {
+      curr.store(p, std::memory_order_relaxed);
+    }
+
     void * allocate_one() {
       return curr.fetch_add(sizeof(Orc), std::memory_order_relaxed);
     }
@@ -53,4 +56,4 @@ namespace cjl {
 
     void deallocate_n(void *) noexcept {}
   };
-} // cjl
+} // cjl::atomic

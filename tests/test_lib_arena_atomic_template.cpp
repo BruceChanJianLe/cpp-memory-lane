@@ -22,7 +22,7 @@ template <class F, class ... Args>
 
 int main ([[maybe_unused]] int argc, [[maybe_unused]] char *argv[])
 {
-  using namespace cjl;
+  using namespace cjl::atomic_tmp;
   std::vector<Orc*> orcs;
   orcs.reserve(Orc::NB_MAX);
   static constexpr int half {Orc::NB_MAX / 2};

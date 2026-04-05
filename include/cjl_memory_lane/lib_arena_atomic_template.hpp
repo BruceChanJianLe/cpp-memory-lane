@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <type_traits>
 
-namespace cjl {
+namespace cjl::atomic_tmp {
 
   class Orc final {
     char name[4] {'U', 'R', 'G'};
@@ -44,6 +44,10 @@ namespace cjl {
       return singleton;
     }
 
+    void reset() {
+      curr.store(p, std::memory_order_relaxed);
+    }
+
     void * allocate_one() {
       return curr.fetch_add(sizeof(T), std::memory_order_relaxed);
     }
@@ -56,4 +60,4 @@ namespace cjl {
 
     void deallocate_n(void *) noexcept {}
   };
-} // cjl
+} // cjl::atomic_tmp
