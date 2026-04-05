@@ -38,4 +38,4 @@ enable_testing()
 add_subdirectory(tests)
 
 # Benchmarking (always measure!)
-# add_subdirectory(benchmarks)
+add_subdirectory(benchmarks)
