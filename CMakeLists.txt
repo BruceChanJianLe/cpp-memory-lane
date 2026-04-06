@@ -27,10 +27,14 @@ target_compile_features(${name} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
 target_compile_options(${name} INTERFACE -Wall -Wextra -O2)
 endfunction()
 
+# Arena memory
 add_lib(lib_arena_atomic)
 add_lib(lib_arena_global)
 add_lib(lib_arena_meyer)
 add_lib(lib_arena_atomic_template)
+
+# Simple shared_ptr
+add_lib(lib_simple_shared_ptr)
 
 # Testing (ensure correctness)
 include(CTest)
