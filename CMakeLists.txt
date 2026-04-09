@@ -36,6 +36,9 @@ add_lib(lib_arena_atomic_template)
 # Simple shared_ptr
 add_lib(lib_simple_shared_ptr)
 
+# Simple unique_ptr
+add_lib(lib_simple_unique_ptr)
+
 # Testing (ensure correctness)
 include(CTest)
 enable_testing()
