@@ -51,3 +51,4 @@ add_lib_unit_test(lib_arena_meyer)
 add_lib_unit_test(lib_arena_atomic_template)
 
 add_lib_gtest(lib_simple_shared_ptr)
+add_lib_gtest(lib_simple_unique_ptr)
