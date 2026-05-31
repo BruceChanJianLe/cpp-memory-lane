@@ -39,6 +39,9 @@ add_lib(lib_simple_shared_ptr)
 # Simple unique_ptr
 add_lib(lib_simple_unique_ptr)
 
+# Simple vector
+add_lib(lib_simple_vector)
+
 # Testing (ensure correctness)
 include(CTest)
 enable_testing()
