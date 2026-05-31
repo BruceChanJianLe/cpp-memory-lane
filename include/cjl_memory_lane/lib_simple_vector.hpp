@@ -60,7 +60,7 @@ public:
   vector(vector &&other) noexcept
       : elems{std::exchange(other.elems, nullptr)},
         nelems{std::exchange(other.nelems, 0)},
-        cap{std::exchange(other.nelems, 0)} {}
+        cap{std::exchange(other.cap, 0)} {}
 
   // Initializer list ctor
   vector(std::initializer_list<T> src)
@@ -118,7 +118,7 @@ public:
     // if request is the same as current
     if (new_cap <= capacity())
       return;
-    auto p = new T[new_cap];
+    auto p = new value_type[new_cap];
 
     if constexpr (std::is_nothrow_move_assignable_v<T>) {
       std::move(begin(), end(), p);
@@ -153,7 +153,7 @@ public:
     if (full())
       grow();
 
-    elems[size()] = value_type(std::forward(args)...);
+    elems[size()] = value_type(std::forward<Args>(args)...);
     ++nelems;
     return back();
   }
