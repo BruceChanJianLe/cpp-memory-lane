@@ -47,6 +47,7 @@ public:
   // copy ctor
   vector(const vector &other)
       : elems{new value_type[other.size()]}, nelems{other.size()},
+        // This's alright, capcity in the other are considered as artifact now
         cap{other.size()} {
     try {
       std::copy(other.begin(), other.end(), begin());
