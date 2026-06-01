@@ -20,14 +20,19 @@
             pkgs.cmake
             pkgs.llvmPackages.clang
             pkgs.gdb
+            pkgs.ccache
           ];
 
         shellHook = ''
+          export CC="ccache gcc"
+          export CXX="ccache g++"
+          export CCACHE_DIR="$HOME/.cache/ccache/"
           echo "--- C++ Development Environment ---"
           echo "GCC version: $(gcc --version | head -n 1)"
           echo "Clang version: $(clang --version | head -n 1)"
           echo "CMake version: $(cmake --version | head -n 1)"
           echo "GDB version: $(gdb --version | head -n 1)"
+          echo "CCache version: $(ccache --version | head -n 1)"
           '';
         };
       });
