@@ -1,9 +1,9 @@
 # Link to cjl_memory_lane library + GTest
 function(add_lib_gtest name)
-  add_executable(test_${name})
-  target_sources(test_${name}
+  add_executable(gtest_${name})
+  target_sources(gtest_${name}
     PRIVATE
-      test_${name}.cpp
+      gtest_${name}.cpp
       ../src/cjl_memory_lane/${name}.cpp
     PUBLIC
       FILE_SET HEADERS
@@ -11,8 +11,8 @@ function(add_lib_gtest name)
       FILES
         ../include/cjl_memory_lane/${name}.hpp
   )
-  target_link_libraries(test_${name} PRIVATE cjl::${name} GTest::gtest_main)
-  add_test(NAME test_${name} COMMAND test_${name})
+  target_link_libraries(gtest_${name} PRIVATE cjl::${name} GTest::gtest_main)
+  add_test(NAME gtest_${name} COMMAND gtest_${name})
 endfunction()
 
 # Link to cjl_memory_lane library
@@ -49,6 +49,7 @@ add_lib_unit_test(lib_arena_atomic)
 add_lib_unit_test(lib_arena_global)
 add_lib_unit_test(lib_arena_meyer)
 add_lib_unit_test(lib_arena_atomic_template)
+add_lib_unit_test(lib_simple_vector)
 
 add_lib_gtest(lib_simple_shared_ptr)
 add_lib_gtest(lib_simple_unique_ptr)
