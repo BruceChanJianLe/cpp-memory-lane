@@ -114,7 +114,7 @@ public:
     return size() == other.size() && std::equal(begin(), end(), other.begin());
   }
 
-  void resize(size_type new_cap) {
+  void reserve(size_type new_cap) {
     // if request is the same as current
     if (new_cap <= capacity())
       return;
@@ -162,7 +162,7 @@ private:
   pointer elems{};
   size_type nelems{}, cap{};
   bool full() const { return size() == capacity(); }
-  void grow() { resize(capacity() ? 2 * capacity() : 16); }
+  void grow() { reserve(capacity() ? 2 * capacity() : 16); }
 };
 
 template <class T>

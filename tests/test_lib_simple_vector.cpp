@@ -169,7 +169,7 @@ TEST(SimpleVector, EmplaceBackReturnsRef) {
 
 TEST(SimpleVector, ResizeGrowsCapacityOnly) {
   Vec v{1, 2, 3};
-  v.resize(100);
+  v.reserve(100);
   EXPECT_EQ(v.size(), 3u);
   EXPECT_EQ(v.capacity(), 100u);
   EXPECT_EQ(v[0], 1);
@@ -177,7 +177,7 @@ TEST(SimpleVector, ResizeGrowsCapacityOnly) {
 
 TEST(SimpleVector, ResizeNoOpWhenSmaller) {
   Vec v{1, 2, 3};
-  v.resize(2);
+  v.reserve(2);
   EXPECT_EQ(v.size(), 3u);
   EXPECT_EQ(v.capacity(), 3u);
 }
