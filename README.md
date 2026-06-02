@@ -64,6 +64,35 @@ A hand-rolled `unique_ptr<T>` with exclusive ownership, a custom deleter via EBO
 
 7. **`explicit` constructors block `{val}` aggregate-style array init** — `new T[N]{{1},{2},{3}}` fails when the constructor is `explicit` because each element is copy-initialized from its brace-initializer, and `explicit` forbids that implicit conversion. The fix is direct-initialization: `new T[N]{T{1}, T{2}, T{3}}`.
 
+## Simple Vector
+
+A hand-rolled `vector<T>` using `new T[n]` for storage, copy-and-swap assignment, and C++23 deduced-`this` accessors.
+
+### Key Takeaways
+
+1. **`new T[n]` forces default constructibility on `T`** — `new T[n]` value-initialises all `n` slots (calling the default constructor for class types), not just the live ones. Any `T` without a default constructor causes a compile error on the first `grow()`. `std::vector` avoids this by separating allocation from construction: raw memory (`operator new`) is obtained first, and placement new is called only for elements that are actually inserted.
+
+2. **The unused-slot cost is structural, not accidental** — on every capacity doubling, `new T[new_cap]` constructs all `new_cap` objects; only `size()` of them receive the pushed value via assignment. The remaining `new_cap - size()` slots exist as default-constructed objects until the next resize. For non-trivial `T` (e.g. `std::string`), this is extra construction work that a placement-new design avoids entirely, hence, std::vector is faster.
+
+3. **Brace-init always prefers `initializer_list`** — `Vec v{5, 7}` resolves to `vector(initializer_list<int>{5, 7})`, producing a 2-element vector, not the fill constructor `vector(size_type n, const_reference val)`. The fix is parentheses: `Vec v(5, 7)`. This is a fundamental C++11 rule: if an `initializer_list` constructor is viable, brace-init always picks it.
+
+4. **The `alive` counter must track every constructor path, including default** — a `static inline std::atomic<int> alive` counter is a clean leak detector, but it only works correctly if every constructor increments it. Because `new T[n]` default-constructs all capacity slots, the default constructor must also call `++alive`. If it does not, the matching `--alive` in the destructor (called for every slot by `delete[]`) drives `alive` negative, breaking all lifetime assertions.
+
+5. **Copy-and-swap gives self-assignment safety and exception safety for free** — both copy and move assignment delegate to the respective constructor plus `swap`. A copy is fully constructed before `*this` is touched, so a thrown exception leaves `*this` unchanged; and since a fresh temporary is swapped in, self-assignment (`v = v`) is safe without an explicit `if (this != &other)` guard.
+
+6. **C++23 deduced `this` collapses const/non-const overload pairs** — `operator[]`, `front`, `back`, `begin`, and `end` each need only one definition: `template <class S> decltype(auto) f(this S&& self)`. The deduced `S` is `vector&`, `const vector&`, or `vector&&` depending on the call, and `decltype(auto)` propagates the correct reference category. In C++20 and earlier each of these would require two overloads.
+
+### Results (push_back, -O2)
+
+| Type | Implementation | N | Time |
+|---|---|---|---|
+| `int` (trivial) | `cjl::simple::vector` | 1,000,000 | 4,356 µs |
+| `int` (trivial) | `std::vector` | 1,000,000 | 4,202 µs |
+| `std::string` (non-trivial) | `cjl::simple::vector` | 100,000 | 8,193 µs |
+| `std::string` (non-trivial) | `std::vector` | 100,000 | 3,268 µs |
+
+For trivial `int`, both vectors are within noise (~3.7% apart) — the compiler elides the no-op default constructor entirely, so `new int[n]` costs the same as raw allocation. For non-trivial `std::string`, the simple vector is **~2.5× slower**: every `grow()` fires `new std::string[new_cap]`, default-constructing all capacity slots regardless of how many are live. `std::vector` uses raw memory + placement new and only ever constructs the elements actually inserted.
+
 ## Tools
 - Sanitizers
   - [Address Sanitizer](https://learn.microsoft.com/en-us/cpp/sanitizers/asan?view=msvc-170)
